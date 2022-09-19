@@ -1,0 +1,107 @@
+id: net.stabyourself.mari0
+runtime: org.freedesktop.Platform
+runtime-version: "21.08"
+sdk: org.freedesktop.Sdk
+command: /app/bin/mari0.sh
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+modules:
+  - shared-modules/glu/glu-9.json
+
+  # TODO: use luajit for x86 and x86_64
+  #
+  - name: luajit
+    no-autogen: true
+    make-install-args:
+      - PREFIX=/app
+    sources:
+      - type: archive
+        url: https://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz
+        sha256: 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3
+  - name: libmng
+    sources:
+      - type: archive
+        url: http://downloads.sourceforge.net/sourceforge/libmng/libmng-2.0.3.tar.xz
+        sha256: 4a462fdd48d4bc82c1d7a21106c8a18b62f8cc0042454323058e6da0dbb57dd3
+
+  - name: physfs
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    sources:
+      - type: archive
+        url: http://icculus.org/physfs/downloads/physfs-3.0.1.tar.bz2
+        sha256: b77b9f853168d9636a44f75fca372b363106f52d789d18a2f776397bf117f2f1
+
+  - name: libdevil
+    config-opts:
+      - --enable-IL=yes
+      - --enable-ILU=yes
+      - --enable-ILUT=yes
+      - --disable-static
+    rm-configure: true
+    sources:
+      - type: archive
+        url: https://github.com/LuaDist/libdevil/archive/1.7.8.tar.gz
+        sha256: eaa088ea7544343750096fad2bcf8d14b907c6c3fe9714a56e2b54d391a2e25e
+
+      - type: patch
+        path: libdevil-include_IL-il.h.patch
+
+      - type: patch
+        path: libdevil-libpng14.patch
+
+      - type: script
+        dest-filename: autogen.sh
+        commands:
+          - AUTOMAKE="automake --foreign" autoreconf -vfi
+
+  - name: libmodplug
+    sources:
+      - type: archive
+        url: http://downloads.sourceforge.net/modplug-xmms/libmodplug-0.8.9.0.tar.gz
+        sha256: 457ca5a6c179656d66c01505c0d95fafaead4329b9dbaa0f997d00a3508ad9de
+
+  - name: love2d
+    build-options:
+      env:
+        LIBS: -ldl
+    rm-configure: true
+    sources:
+      - type: archive
+        url: https://github.com/love2d/love/releases/download/11.2/love-11.2-linux-src.tar.gz
+        sha256: 6aaf8104fc35bb8bbd7865986b98079e7564ffdb374ea4d33604b46b458444f6 
+      - type: script
+        dest-filename: autogen.sh
+        commands:
+          - AUTOMAKE="automake --foreign" autoreconf -vfi
+
+  - name: mari0
+    buildsystem: simple
+    build-commands:
+      - mv game /app/lib/mari0
+      - install -Dm555 mari0.sh /app/bin/mari0.sh
+      - install -Dm644 512x512.png /app/share/icons/hicolor/512x512/apps/net.stabyourself.mari0.png
+      - install -Dm644 net.stabyourself.mari0.desktop /app/share/applications/net.stabyourself.mari0.desktop
+    sources:
+      - type: git
+        url: https://github.com/Stabyourself/mari0.git
+        commit: 1a33c594db49404840052628ffbaa758a395772c
+        dest: game
+      - type: file
+        path: mari0.sh
+      - type: file
+        path: 512x512.png
+      - type: file
+        path: net.stabyourself.mari0.desktop
+cleanup:
+  - /lib/mari0/.git
+  - /include
+  - /share/man
+  - /lib/pkgconfig
+  - '*.la'

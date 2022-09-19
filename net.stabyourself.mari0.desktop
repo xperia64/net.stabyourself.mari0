@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Mari0
+Exec=/app/bin/mari0.sh
+Type=Application
+Icon=net.stabyourself.mari0
+Categories=Game;BlocksGame
